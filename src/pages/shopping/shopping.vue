@@ -73,6 +73,7 @@
 
 <script>
 import recommended from "../../components/recommended.vue";
+import {apiLogin,apiCart} from "../../api/testApi";
 
 export default {
   components: {
@@ -89,31 +90,23 @@ export default {
     }
   },
   onLoad() {
-    uni.request({
-      url: 'http://ceshi3.dishait.cn/api/login',
-      method: 'POST',
-      data: {
-        username: 'user2',
-        password: 'zcmcss'
-      },
-      success: (res) => {
-        console.log(res.data.data.token);
-        uni.request({
-          url: 'http://ceshi3.dishait.cn/api/cart',
-          header: {
-            'token': res.data.data.token
-          },
-          success: (res) => {
-            this.cart = res.data.data;
-            this.cart.forEach((item,index)=>{
-              item.checked = true;
-            });
-            this.sumAll();
-          }
+    let _this = this;
+    apiLogin({
+      username: 'user2',
+      password: 'zcmcss'
+    }).then(res=>{
+      apiCart({
+        'token': res.data.token
+      }).then(res=>{
+        _this.cart = res.data;
+        _this.cart.forEach((item,index)=>{
+          item.checked = true;
         });
-      }
-    });
+        _this.sumAll();
+      })
+    }).catch(e=>{
 
+    });
   },
   methods: {
     txtClick() {
