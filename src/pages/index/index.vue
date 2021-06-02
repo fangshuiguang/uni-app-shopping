@@ -208,7 +208,7 @@ export default {
 -->
 <template>
   <view class="box">
-    <uni-file-picker
+<!--    <uni-file-picker
         v-model="imageValue"
         fileMediatype="all"
         @select="select"
@@ -217,32 +217,39 @@ export default {
         @fail="fail"
     >
       <button type="primary" size="mini">选择文件</button>
-    </uni-file-picker>
+    </uni-file-picker>-->
 
 
     <view style="padding: 0 24px;margin-top: 24px">
-      <uni-forms ref="form" :value="formData">
+<!--      <uni-forms ref="form" :value="formData">
         <uni-forms-item label="姓名" name="pname">
           <uni-easyinput type="text" v-model="formData.pname" placeholder="请输入姓名"/>
         </uni-forms-item>
         <uni-forms-item label="密码" name="email">
           <uni-easyinput type="text" v-model="formData.email" placeholder="请输入密码"/>
         </uni-forms-item>
-<!--        <uni-forms-item label="城市" name="city">
+&lt;!&ndash;        <uni-forms-item label="城市" name="city">
           <view class="uni-list-cell">
             <picker mode="selector" v-model="formData.city" :range-key="'label'" :range="array"
                     @change="bindPickerChange">
               <view class="uni-input">{{ array[index].label }}</view>
             </picker>
           </view>
-        </uni-forms-item>-->
+        </uni-forms-item>&ndash;&gt;
+
         <button @click="submitForm" type="primary">登录</button>
-      </uni-forms>
+      </uni-forms>-->
+
+
+      <button @click="showUserInfo" v-if="!isAuth">获取头像</button>
+      <view v-else>
+        欢迎您{{globalData.userInfo.uid}}
+      </view>
     </view>
   </view>
 </template>
 <script>
-import {loginByPassword} from '../../api/testApi';
+import {register,isRegister,loginByPassword} from '../../api/testApi';
 export default {
   data() {
     return {
@@ -305,13 +312,95 @@ export default {
         }*/
       },
       index: 0,
-      imageValue: []
+      imageValue: [],
+      globalData:{
+        openid:'',
+        session_key:'',
+        userInfo:{
+          uid: "",
+          userName: ""
+        }
+      },
+      xcx:{
+        appid:'wx919189ebcb958151',
+        secret:'2d72363e9875694d28b81f63b54c48a0'
+      },
+      isAuth: false
     }
   },
+  created() {
+    //this.$refs.form.setRules(this.rules);
+  },
   mounted() {
-    this.$refs.form.setRules(this.rules);
+    // #ifdef MP-WEIXIN
+    this.getOpenId();
+    // #endif
   },
   methods: {
+    /***
+     * 判断是否授权(是否注册过)
+     *
+     * @param cb
+     */
+    isRegisterOrNot(){
+      let _this = this;
+      isRegister(this.globalData.openid).then(res=>{
+        _this.isAuth = res.result.result?true:false;
+        _this.globalData.userInfo = res.result.user;
+      })
+    },
+    /***
+     * 获取微信用户信息
+     * 完成注册
+     * @param
+     */
+    showUserInfo(){
+      let _this = this;
+      wx.getUserProfile({
+        desc: '用于完善资料',
+        success: (res) => {
+          _this.globalData.userInfo = res.userInfo;
+          register(_this.globalData.userInfo.nickName,_this.globalData.openid).then(
+              res=>{
+                _this.isRegisterOrNot();
+              }
+          ).catch(e=>{
+
+          });
+        },
+        fail:(err) => {
+        }
+      })
+    },
+    /***
+     * 获取登录凭证
+     * @param cb
+     */
+    getOpenId: function (cb) {
+      let that = this;
+      if (this.globalData.openid) {
+        typeof cb == "function" && cb(this.globalData.openid)
+      } else {
+        wx.login({
+          success: function (res) {
+            if (res.code) {
+              let l='https://api.weixin.qq.com/sns/jscode2session?appid='+that.xcx.appid+'&secret='+that.xcx.secret+'&js_code='+res.code+'&grant_type=authorization_code';
+              wx.request({
+                url: l,
+                data: {},
+                method: 'GET',
+                success: function(response){
+                  that.globalData = response.data;
+                  that.isRegisterOrNot();
+                }
+              })
+            } else {
+              console.log('获取用户登录态失败!' + res.errMsg)
+            }
+          }
+        });
+      }
+    },
     bindPickerChange: function (e) {
       let _this = this;
       this.index = e.target.value;

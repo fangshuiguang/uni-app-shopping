@@ -4,4 +4,7 @@
 这是一个使用uniapp开发的商城demo，自己在此基础上学习了uni-ui扩展组件，请求后台接口数据，完成打包环境配置  
 （h5和微信小程序）。
 
+配置域名
+https://blog.csdn.net/idomyway/article/details/90744216
+
 uniapp商城demo，自己在此基础上学习了uni-ui扩展组件，请求后台接口数据（fetch），页面跳转相互传参，完成h5和微信小程序打包环境配置。
